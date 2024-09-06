@@ -1,5 +1,4 @@
-
-
+/*------------------------STUDENT_MANAGEMENT_SYSTEM-----------------------------------------------------------*/
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
