@@ -1,299 +1,181 @@
-/*------------------------STUDENT_MANAGEMENT_SYSTEM-----------------------------------------------------------*/
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <ctype.h>
+#include <iostream>
+#include <fstream>
+#include <string>
+using namespace std;
 
-typedef struct{
-    int code;
-    int recNo;
-}BinTreeElementType;
+class Student {
+    int id;
+    string name;
+    float marks;
 
-typedef struct BinTreeNode *BinTreePointer;
-
-struct BinTreeNode{
-    BinTreeElementType Data;
-    BinTreePointer LChild, RChild;
-} ;
-
-typedef enum{
-    FALSE, TRUE
-} boolean;
-
-typedef struct{
-    int code;
-    char surname[20];
-    char name[20];
-    char sex;
-    int year;
-    float grade;
-}StudentT;
-
-void CreateBST(BinTreePointer *Root);
-boolean BSTEmpty(BinTreePointer Root);
-void RecBSTInsert(BinTreePointer *Root, BinTreeElementType Item);
-void RecBSTSearch(BinTreePointer Root, BinTreeElementType KeyValue, boolean *Found, BinTreePointer *LocPtr);
-void RecBSTInorder(BinTreePointer Root);
-void menu(int *choice);
-int BuildBST(BinTreePointer *Root);
-void PrintStudent(int RecNum);
-void printStudentsWithGrade();
-
-int main(){
-    FILE *fp;
-    boolean found;
-    BinTreePointer Root, LocPtr;
-    int choice, size;
-    BinTreeElementType indexRec;
-    StudentT student;
-
-    size = BuildBST(&Root);
-    do{
-        menu(&choice);
-        if(choice == 1){
-            fp = fopen("students_Sample.dat","a");
-            if (fp == NULL){
-                printf("Can't open students_Sample.dat\n");
-                exit(1);
-            }
-            else{
-                printf("Give student's AM: ");
-                scanf("%d", &student.code);
-                getchar();
-                while(student.code<0){
-                    printf("Code can't be a negative number\n");
-                    printf("Give student's AM: ");
-                    scanf("%d", &student.code);
-                    getchar();
-                }
-                indexRec.code = student.code;
-                RecBSTSearch(Root, indexRec, &found, &LocPtr);
-                if(found == FALSE){
-                    printf("Give student surname: ");
-                    fgets(student.surname,20,stdin);
-                    student.surname[strlen(student.surname)-1]='\0';
-
-                    printf("Give student name: ");
-                    fgets(student.name,20,stdin);
-                    student.name[strlen(student.name)-1]='\0';
-
-                    printf("Give student's registration year: ");
-                    scanf("%d", &student.year);
-                    getchar();
-
-                    printf("Give student's grade(0-20): ");
-                    scanf("%g", &student.grade);
-                    getchar();
-                    while(student.grade<0 || student.grade>20){
-                        printf("Give student's grade(0-20): ");
-                        scanf("%g", &student.grade);
-                        getchar();
-                    }
-
-                    printf("Give student sex F/M: ");
-                    scanf("%c", &student.sex);
-                    getchar();
-                    while(student.sex!='F' && student.sex!='M'){
-                        printf("Give student sex F/M: ");
-                        scanf("%c", &student.sex);
-                        getchar();
-                    }
-
-                    printf("\nsize = %d\n", size);
-                    indexRec.recNo = size;
-                    RecBSTInsert(&Root, indexRec);
-                    fprintf(fp,"%d, %s, %s, %c, %d, %g%c", student.code, student.surname, student.name,
-                            student.sex, student.year, student.grade, '\n');
-
-                    size++;
-                    fclose(fp);
-                }
-                else
-                    printf("A student with the same code is already in the tree");
-            }
-        }
-        if(choice == 2){
-            printf("Give student's code: ");
-            scanf("%d", &student.code);
-            indexRec.code = student.code;
-            RecBSTSearch(Root, indexRec, &found, &LocPtr);
-            if(found == TRUE){
-                indexRec.recNo = LocPtr->Data.recNo;
-                PrintStudent(indexRec.recNo);
-            }
-            else
-                printf("There is no student with this code");
-        }
-        if(choice == 3){
-            printf("Print all students (Code, Number of record) ascending order(Code): \n");
-            RecBSTInorder(Root);
-            printf("\n");
-        }
-        if(choice == 4){
-            printf("Print students with a >= given grade: \n");
-            printStudentsWithGrade();
-        }
-    }while(choice!=5);
-
-    system("PAUSE");
-}
-
-void menu(int *choice){
-    printf("\n                  MENU                  \n");
-    printf("-------------------------------------------------\n");
-    printf("1. Insert new student\n");
-    printf("2. Search for a student\n");
-    printf("3. Print all students (Traverse Inorder)\n");
-    printf("4. Print students with a >= given grade\n");
-    printf("5. Quit\n");
-    printf("\nChoice: ");
-    do{
-        scanf("%d", choice);
-        getchar();
-    } while (*choice<1 && *choice>4);
-}
-
-void CreateBST(BinTreePointer *Root){*Root = NULL;}
-
-boolean BSTEmpty(BinTreePointer Root){return (Root==NULL);}
-
-void RecBSTInsert(BinTreePointer *Root, BinTreeElementType Item){
-    if(BSTEmpty(*Root)){
-        (*Root) = (BinTreePointer)malloc(sizeof (struct BinTreeNode));
-        (*Root) ->Data.code = Item.code;
-        (*Root) ->Data.recNo = Item.recNo;
-        (*Root) ->LChild = NULL;
-        (*Root) ->RChild = NULL;
+public:
+    // Function to input student data
+    void input() {
+        cout << "Enter ID: ";
+        cin >> id;
+        cin.ignore();
+        cout << "Enter Name: ";
+        getline(cin, name);
+        cout << "Enter Marks: ";
+        cin >> marks;
     }
+
+    // Function to display student data
+    void display() const {
+        cout << "ID: " << id << "\nName: " << name << "\nMarks: " << marks << endl;
+    }
+
+    // Getter for ID
+    int getID() const {
+        return id;
+    }
+
+    // Getter for Marks
+    float getMarks() const {
+        return marks;
+    }
+};
+
+// Function to add a student record to the file
+void addStudent() {
+    Student student;
+    ofstream outFile("students.dat", ios::binary | ios::app);
+    student.input();
+    outFile.write(reinterpret_cast<char*>(&student), sizeof(Student));
+    outFile.close();
+    cout << "Student record added successfully.\n";
+}
+
+// Function to display all student records from the file
+void displayAllStudents() {
+    Student student;
+    ifstream inFile("students.dat", ios::binary);
+    if (!inFile) {
+        cout << "Error in opening file.\n";
+        return;
+    }
+    cout << "\n\nDisplaying All Students:\n";
+    while (inFile.read(reinterpret_cast<char*>(&student), sizeof(Student))) {
+        student.display();
+        cout << "-----------------------\n";
+    }
+    inFile.close();
+}
+
+// Function to search for a student by ID
+void searchStudent(int id) {
+    Student student;
+    ifstream inFile("students.dat", ios::binary);
+    bool found = false;
+    while (inFile.read(reinterpret_cast<char*>(&student), sizeof(Student))) {
+        if (student.getID() == id) {
+            student.display();
+            found = true;
+            break;
+        }
+    }
+    inFile.close();
+    if (!found)
+        cout << "Student not found.\n";
+}
+
+// Function to delete a student record by ID
+void deleteStudent(int id) {
+    Student student;
+    ifstream inFile("students.dat", ios::binary);
+    ofstream outFile("temp.dat", ios::binary);
+    bool found = false;
+
+    while (inFile.read(reinterpret_cast<char*>(&student), sizeof(Student))) {
+        if (student.getID() == id) {
+            found = true;
+        } else {
+            outFile.write(reinterpret_cast<char*>(&student), sizeof(Student));
+        }
+    }
+
+    inFile.close();
+    outFile.close();
+
+    remove("students.dat");
+    rename("temp.dat", "students.dat");
+
+    if (found)
+        cout << "Student record deleted successfully.\n";
     else
-        if (Item.code < (*Root) ->Data.code)
-            RecBSTInsert(&(*Root) ->LChild, Item);
-        else if (Item.code > (*Root) ->Data.code)
-            RecBSTInsert(&(*Root) ->RChild, Item);
-        else
-            printf("This code already exists in the tree\n", Item.code);
+        cout << "Student not found.\n";
 }
 
-void RecBSTSearch(BinTreePointer Root, BinTreeElementType KeyValue, boolean *Found, BinTreePointer *LocPtr){
-    boolean stop;
-
-    if (BSTEmpty(Root))
-        *Found=FALSE;
-    else
-        if (KeyValue.code < Root->Data.code)
-            RecBSTSearch(Root->LChild, KeyValue, &(*Found), &(*LocPtr));
-        else
-            if (KeyValue.code > Root->Data.code)
-                RecBSTSearch(Root->RChild, KeyValue, &(*Found), &(*LocPtr));
-            else{
-                *Found = TRUE;
-                *LocPtr = Root;
-            }
-}
-
-void RecBSTInorder(BinTreePointer Root){
-    if (Root!=NULL){
-        RecBSTInorder(Root->LChild);
-        printf("(%d, %d), ", Root->Data.code, Root->Data.recNo);
-        RecBSTInorder(Root->RChild);
+// Function to display students with marks greater than or equal to the specified value
+void displayStudentsWithMarks(float minMarks) {
+    Student student;
+    ifstream inFile("students.dat", ios::binary);
+    bool found = false;
+    if (!inFile) {
+        cout << "Error in opening file.\n";
+        return;
     }
-}
 
-int BuildBST(BinTreePointer *Root){
-    FILE *fp;
-    StudentT student;
-    BinTreeElementType indexRec;
-    int size, nscan;
-    char termch;
-
-    CreateBST(Root);
-
-    size = 0;
-    fp = fopen("students_Sample.dat","r");
-    if (fp == NULL){
-        printf("Can't open students_Sample.dat\n");
-        exit(1);
-    }
-    else{
-        while(TRUE){
-            nscan = fscanf(fp,"%d, %20[^,], %20[^,], %c, %d, %g%c", &student.code, student.surname, student.name, &student.sex, &student.year, &student.grade, &termch);
-            if (nscan == EOF) break;
-            if (nscan != 7 || termch != '\n'){
-                printf("Improper file format\n");
-                break;
-            }
-            else{
-                indexRec.code = student.code;
-                indexRec.recNo = size;
-
-                RecBSTInsert((Root), indexRec);
-                size++;
-            }
+    cout << "\n\nDisplaying Students with Marks >= " << minMarks << ":\n";
+    while (inFile.read(reinterpret_cast<char*>(&student), sizeof(Student))) {
+        if (student.getMarks() >= minMarks) {
+            student.display();
+            cout << "-----------------------\n";
+            found = true;
         }
     }
-    fclose(fp);
+    inFile.close();
 
-    return size;
+    if (!found) {
+        cout << "No student found with marks >= " << minMarks << ".\n";
+    }
 }
 
-void PrintStudent(int RecNum){
-    FILE *infile;
-    int nscan, lines;
-    char termch;
-    StudentT student;
+// Main menu function
+int main() {
+    int choice, id;
+    float marks;
 
-    lines = 0;
+    do {
+        cout << "\n\n*** Student Management System ***\n";
+        cout << "1. Add Student\n";
+        cout << "2. Display All Students\n";
+        cout << "3. Search Student by ID\n";
+        cout << "4. Delete Student by ID\n";
+        cout << "5. Display Students with Marks >= X\n";
+        cout << "6. Exit\n";
+        cout << "Enter your choice: ";
+        cin >> choice;
 
-    infile = fopen("students_Sample.dat", "r");
-    if (infile == NULL)
-        printf("Can't open students_Sample.dat\n");
-    else{
-        while(lines <= RecNum){
-            nscan = fscanf(infile,"%d, %20[^,], %20[^,], %c, %d, %g%c", &student.code, student.surname, student.name, &student.sex, &student.year, &student.grade, &termch);
-            if (nscan == EOF) break;
-            if (nscan != 7 || termch != '\n'){
-                printf("Improper file format\n");
-                break;
-            }
-            else
-                lines++;
+        switch (choice) {
+        case 1:
+            addStudent();
+            break;
+        case 2:
+            displayAllStudents();
+            break;
+        case 3:
+            cout << "Enter ID to search: ";
+            cin >> id;
+            searchStudent(id);
+            break;
+        case 4:
+            cout << "Enter ID to delete: ";
+            cin >> id;
+            deleteStudent(id);
+            break;
+        case 5:
+            cout << "Enter the minimum marks: ";
+            cin >> marks;
+            displayStudentsWithMarks(marks);
+            break;
+        case 6:
+            cout << "Exiting...\n";
+            break;
+        default:
+            cout << "Invalid choice. Try again.\n";
         }
-        if(lines != RecNum)
-            printf("%d, %s, %s, %c, %d, %0.2g\n", student.code, student.surname, student.name, student.sex, student.year, student.grade);
-    }
-    fclose(infile);
-}
+    } while (choice != 6);
 
-void printStudentsWithGrade(){
-    FILE *infile;
-    int nscan;
-    char termch;
-    StudentT student;
-    float theGrade;
-
-    printf("Give the grade: ");
-    scanf("%g", &theGrade);
-    while(theGrade<0){
-        printf("Grade can't be a negative number\n");
-        printf("Give the grade: ");
-        scanf("%g", &theGrade);
-    }
-
-    infile = fopen("students_Sample.dat", "r");
-    if (infile == NULL)
-        printf("Can't open students_Sample.dat\n");
-    else{
-        while(TRUE){
-            nscan = fscanf(infile,"%d, %20[^,], %20[^,], %c, %d, %g%c", &student.code, student.surname, student.name, &student.sex, &student.year, &student.grade, &termch);
-            if (nscan == EOF) break;
-            if (nscan != 7 || termch != '\n'){
-                printf("Improper file format\n");
-                break;
-            }
-            else
-                if(student.grade >= theGrade)
-                    printf("%d, %s, %s, %c, %d, %g\n", student.code, student.surname, student.name, student.sex, student.year, student.grade);
-        }
-    }
-    fclose(infile);
+    return 0;
 }
